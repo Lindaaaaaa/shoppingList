@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="build/react.js"></script>
+	<script src="build/JSXTransformer.js"></script> 
+	<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+	<script type="text/jsx">
+	/** @jsx React.DOM */
+var placeholder = document.createElement("li");
+placeholder.className = "placeholder";
+
+
+   var LibraryBanner=React.createClass({
+   	render:function(){
+   	return (
+   		<h1>Book Library IN React </h1>
+   		);
+   }
+});
+
+    var ShoppingList=React.createClass({
+   	render:function(){
+   	return (
+   		<h1>Personal Shopping list </h1>
+   		);
+   }
+});
+
+
+   var Book=React.createClass({
+    getInitialState:function(){
+    	return{total:0}
+    },
+
+
+   	render:function(){
+   	return (
+   		<div>
+   		<li dataid={this.props.dataid} key={this.props.key} draggable="true" onDragEnd={this.props.onDragEnd} onDragStart={this.props.onDragStart}>{this.props.name} <b>${this.props.price}</b><button onClick={this.props.onClickClose}>Remove</button></li>
+   		</div>
+   		);
+   }
+   });
+
+
+	var BookList=React.createClass({
+		getInitialState:function(){
+			return {searchString: "",books:libraries,bookName:"",totalPrice:0};
+		},
+
+  dragStart: function(e) {
+  	console.log("getCalled");
+  	if(!e){ e = window.event; }
+    this.dragged = e.currentTarget;
+    console.log(this.dragged);
+    e.dataTransfer.effectAllowed = 'move';
+
+    // Firefox requires calling dataTransfer.setData
+    // for the drag to properly work
+    e.dataTransfer.setData("text/html", e.currentTarget);
+    console.log(    e.dataTransfer.setData("text/html", e.currentTarget));
+  },
+  dragEnd: function(e) {
+
+    this.dragged.style.display = "block";
+    this.dragged.parentNode.removeChild(placeholder);
+
+    // Update state
+    var data = this.state.books;
+    var from = Number(this.dragged.dataset.id);
+    var to = Number(this.over.dataset.id);
+    if(from < to) to--;
+    data.splice(to, 0, data.splice(from, 1)[0]);
+    this.setState({books: data});
+  },
+  dragOver: function(e) {
+    e.preventDefault();
+    this.dragged.style.display = "none";
+    if(e.target.className == "placeholder") return;
+    this.over = e.target;
+    e.target.parentNode.insertBefore(placeholder, e.target);
+  },
+
+		handleChange:function(e){
+			this.setState({searchString:e.target.value});
+		},
+		handleNewBook:function(e){
+		   var newName=e.target.value;
+		   this.setState({bookName:newName});
+		},
+
+		addBook:function(){
+			if(this.state.bookName!=""){
+			var newName=this.state.bookName;
+			var books=this.state.books;
+           books.push({
+           	name:newName,
+           	price:25
+           });
+           this.setState({books:books,});
+         }
+		},
+		removeBook:function(index){
+		  books=this.state.books
+          this.state.books.splice(index,1);
+          this.setState({books:books});
+		},
+
+
+		render:function(){
+			var libraries=this.state.books;
+			var searchString=this.state.searchString.trim().toLowerCase();
+
+			if(searchString.length>0){
+				libraries=libraries.filter(function(book){
+					return book.name.toLowerCase().match(searchString);
+				});
+			}
+
+			var books=libraries.map(function (book,index){
+				return(
+				<Book name={book.name} price={book.price} key={index} onClickClose={this.removeBook.bind(this,index)}
+				dataid={index} draggable="true" onDragEnd={this.dragEnd.bind(this,index)} onDragStart={this.dragStart.bind(this,index)} />
+				);
+			}.bind(this))
+
+            /*calculate total price*/
+            var tp=this.state.totalPrice;
+			for(var i=0;i<libraries.length;i++){
+               tp=tp+libraries[i].price;
+			}
+
+			
+
+			return (
+				
+				<div>
+				<LibraryBanner />
+				<input type="text" placeholder="Name of the new book" onChange={this.handleNewBook}> <button onClick={this.addBook}>Add Book</button></input>
+				<ul >
+				{books}
+				</ul>
+				<ShoppingList/>
+				<input type="text" placeholder="Search" onChange={this.handleChange}></input>
+				<p>TotalPrice:{tp}</p>
+				</div>
+
+				);
+		}
+	});
+
+	var libraries=[{name:"On sale  Java",price:15},{name:"Math",price:35},{name:"Chemistry",price:20},{name:"Math100",price:40},{name:"Econ101",price:80},{name:"On sale  Econ202",price:5}];
+
+
+	React.renderComponent(
+		<BookList items={libraries}/>,
+		document.body	
+	);
+
+
+
+
+
+	</script>
+</body>
+</html>
